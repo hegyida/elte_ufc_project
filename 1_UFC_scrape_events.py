@@ -458,13 +458,14 @@ def debug_dataframe(df, label="DataFrame"):
     if 'event_name' in df.columns:
         print(f"  - Event names: {df['event_name'].unique().tolist()[:3]} (showing first 3)")
 
-def save_data(df: pd.DataFrame, output_file: str) -> None:
+def save_data(df: pd.DataFrame, output_file: str, overwrite: bool = False) -> None:
     """
-    Save DataFrame to Excel file, merging with existing data if file exists
+    Save DataFrame to Excel file, either merging with existing data or overwriting
     
     Parameters:
     df (pd.DataFrame): DataFrame to save
     output_file (str): Path to output file
+    overwrite (bool): Whether to overwrite existing file instead of merging (default: False)
     """
     if df.empty:
         print(f"No new data to save to {output_file}")
@@ -473,7 +474,7 @@ def save_data(df: pd.DataFrame, output_file: str) -> None:
     # Debug the new data
     debug_dataframe(df, "New data to save")
         
-    if os.path.exists(output_file):
+    if os.path.exists(output_file) and not overwrite:
         try:
             # Load existing data
             existing_data = pd.read_excel(output_file)
@@ -517,7 +518,10 @@ def save_data(df: pd.DataFrame, output_file: str) -> None:
             import traceback
             traceback.print_exc()
     else:
-        # Just save the new data if no existing file
+        # Save the new data (either no existing file or overwrite=True)
+        if overwrite and os.path.exists(output_file):
+            print(f"Overwriting existing file: {output_file}")
+        
         df.to_excel(output_file, index=False)
         print(f"Data saved to {output_file}")
         
@@ -590,8 +594,8 @@ def main():
             # Scrape detailed fight information
             df_detailed = scrape_fight_details(df, processed_fights=processed_fights)
             
-            # Save data
-            save_data(df_detailed, upcoming_events_file)
+            # Save data with overwrite=True to replace the existing file
+            save_data(df_detailed, upcoming_events_file, overwrite=True)
         else:
             print("No new upcoming events found")
 
